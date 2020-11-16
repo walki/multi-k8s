@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t walkib/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true walkib/react-test npm run test
+
+after_success:
+  - docker build -t walkib/multi-client ./client
+  - docker build -t walkib/multi-nginx ./nginx
+  - docker build -t walkib/multi-server ./server
+  - docker build -t walkib/multi-worker ./worker
+  #Log in to the docker CLI
+  - echo "$DOCKER_PW" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push walkib/multi-client
+  - docker push walkib/multi-nginx 
+  - docker push walkib/multi-server
+  - docker push walkib/multi-worker
+
